@@ -6,6 +6,7 @@
 	drp.parse = function parse(v) {
 		var now = this.now || new Date().getTime();
 		var r = { start: 0, end: 0 };
+		console.log(v, v.split(/([^<>]+)?(<>?)?([^<>]+)?/))
 		if(v === "now") {
 			r.start = now - (this.defaultRange/2);
 			r.end = now + (this.defaultRange/2);
