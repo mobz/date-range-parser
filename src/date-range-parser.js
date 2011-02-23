@@ -10,6 +10,6 @@
 			r.start = now - (this.defaultRange/2);
 			r.end = now + (this.defaultRange/2);
 		}
-		return ret;
+		return r;
 	}
 })();
