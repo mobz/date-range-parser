@@ -159,4 +159,19 @@ DateRangeParserTest.prototype.testParse = function() {
 	assertRange(y2010 - 365*day, y2011 + 365*day, "2010 <> 1yr");
 	assertRange(y2010 - 10*day, y2011 + 10*day, "2010 <> 10days");
 	assertRange(y2010 - 1000*sec, y2010 + day + 1000*sec, "2010-01-01 <> 1000 secs");
+
+	/* test non zerod time ranges */
+	
+	drp.now = now + 123;
+	 // absolute times should zero out milliseconds
+	assertRange(now, now + sec, "2001-09-09 01:46:40");
+	assertRange(nowD + 3*hr + 30*min, nowD + 3*hr + 31*min, "3:30");
+	assertRange(nowD + day, nowD + 2*day, "tomorrow");
+	// relative times should not zero it out
+	assertRange(y2010, now + 123, "2010 -> now");
+	assertRange(now - 3*sec + 123, now + 3*sec + 123, "3secs");
+	
+
 };
+
+

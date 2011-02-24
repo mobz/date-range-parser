@@ -87,7 +87,7 @@ under the License.
 		function precArray(d, p, offset) {
 			var tn = makeArray(d);
 			tn[p] += offset || 0; 
-			for(var i = p+1; i < 6; i++) {
+			for(var i = p+1; i < 7; i++) {
 				tn[i] = i < 3 ? 1 : 0;
 			}
 			return tn;
@@ -129,7 +129,7 @@ under the License.
 				dn = makeArray(now);
 				var dt = m[2].match(/^(?:(\d{4})(?:\-(\d\d))?(?:\-(\d\d))?)? ?(?:(\d{1,2})(?:\:(\d\d)(?:\:(\d\d))?)?)?$/);
 				dt.shift();
-				for(var p = 0, z = false, i = 0; i < 6; i++) {
+				for(var p = 0, z = false, i = 0; i < 7; i++) {
 					if(dt[i]) {
 						dn[i] = parseInt(dt[i], 10);
 						p = i;
