@@ -1,0 +1,197 @@
+h1. date-range-parser.js
+
+The _date-range-parser_ is a standalone javascript library that provides a natural language like 
+construct for generating date range queries that would be fed into a database or search service
+
+h2. How To Use
+
+@dateRangeParser.parse()@ either return @null@, if the string can not be converted, or an object with @start@ and @end@ attributes
+@start@ and @end@ are either null (meaning no constraint) or the number of seconds since epoch.
+Often these values can be passed directly to the db/search service.
+Alternately they can be passed directly into the @Date@ constructor to produce javascript Date objects @var myDate = new Date(range.start)@
+
+pre. $("#date-range").blur(function() {
+	var range = window.dateRangeParser.parse($(this).val());
+	if(range) {
+		$("#start-date").val(range.start || "");
+		$("#end-date").val(range.end || "");
+	} else {
+		alert("Invalid date range entered");
+	}
+});
+
+h4. Note on Time Zones
+
+date-range-parser.js work entirely in @UTC / GMT / Z (+0)@ timezone. Usually databases will store dates like this.
+If local time is preferred, the date can be extracted with the timezone applied using methods from the javascript "Date":https://developer.mozilla.org/en/JavaScript/Reference/global_objects/date object.
+
+h4. Note on @now@
+
+the date range parser can generate several types of queries relative to @now@ which is defined as the current time on the users computer (to the millisecond)
+This can be overridden by setting @window.dateRangeParser.now@ to a new value
+
+h2. Quick Syntax Guide
+
+* @now@
+* @today@
+* @tomorrow@
+* @yesterday@
+* @last/this/next week@
+* @last/this/next month@ 
+* @last/this/next year@
+
+* @1000secs@
+* @5mins@
+* @1day@
+* @2days@ 
+* @8d@
+* @9months@
+* @2yrs@
+
+* @5@
+* @5:35@
+* @5:35:12@
+
+* @2011@
+* @2011-03@
+* @2011-03-04@
+
+* @2011-03-04 04@
+* @2011-03-04 04:15@
+* @2011-03-04 04:15:29@
+
+* @2010 -> 2011@
+* @2005-11-05 16:13:49 -> 2005-11-06 05:12:11@
+* @last week -> next week@
+* @2011-05 ->@
+* @< now@
+* @2000-01-01 -> last week@
+
+* @2000 -> 10y@
+* @3mins < now@
+* @last year -> 6months@
+
+* @2010-05-13 05:13 <> 10m@
+* @now <> 1yr@
+* @lastweek <> 1month@
+
+h2. Syntax in more detail
+
+h3. Keywords / Key Phrases
+
+* @now@
+* @today@
+* @tomorrow@
+* @yesterday@
+* @last/this/next week@
+* @last/this/next month@ 
+* @last/this/next year@
+
+Creates a range covering all value dates relative to @now@
+
+Note: spaces are optional
+
+h3. Ranges
+
+* @1000secs@
+* @5mins@
+* @1day@
+* @2days@ 
+* @8d@
+* @9months@
+* @2yrs@
+
+Entering a range alone creates a date search centered on @now@ and spreading in to the past and future by the specified amount
+Examples:
+given now is @2001-09-09 01:46:40@
+* "3days" searches from 3 days in the past to 3 days in the future (@2001-09-03 01:46:40 -> 2001-09-12 01:46:40@)
+* "1hr" searches from 1 hour in the past to 1 hour in the future (@2001-09-09 00:46:40 -> 2001-09-09 02:46:40@)
+* "600mins" searches from 10 hours in the past to 10 hours in the future (@2001-09-08 15:46:40 -> 2001-09-09 11:46:40@)
+
+
+The following aliases can be used with ranges;
+* seconds: s, sec, secs, second, seconds
+* minutes: m, min, mins, minute minutes
+* hours: h, hr, hrs, hour, hours
+* days: d, day, days
+* months: mo, mos, month, months
+* years: y, yr, yrs, year, years
+
+Note: Months are always calculates as 31 days, and years are always calculated as 365 days
+
+h3. Dates
+
+* @2011@
+* @2011-03@
+* @2011-03-04@
+
+A date format alone will search the range of dates covered by the date.
+* "2011" searches the year of 2011 (@2011-01-01 00:00:00.000 -> 2011-12-31 23:59:59.999@)
+* "2011-03" searches the month of march 2011  (@2011-03-01 00:00:00.000 -> 2011-03-31 23:59:59.999@)
+* "2011-03-04" searches the day of 4th march 2011  (@2011-03-04 00:00:00.000 -> 2011-03-04 23:59:59.999@)
+
+Dates _must_ be specified in the YYYY-MM-DD format
+
+h3. Times
+
+* @5@
+* @5:35@
+* @5:35:12@
+
+entering a time creates a range in today
+examples:
+* "5" searches the hour of 5am for today (@_today_ 05:00:00.000 -> _today_ 05:59:59.999@)
+* "5:35" searches the minute of 5:35 for today  (@_today_ 05:35:00.000 -> _today_ 05:35:59.999@)
+* "5:35:12" searches the second of 5:35:12 for today  (@_today_ 05:35:12.000 -> _today_ 05:35:12.999@)
+
+Times must be entered in the H-MM-SS format, and am/pm can not be used
+
+h3. DateTime
+
+* @2011-03-04 04@
+* @2011-03-04 04:15@
+* @2011-03-04 04:15:29@
+
+entering a date and time part creates a range on the specified interval
+examples:
+* "2011-03-04 04" searches the hour of 4am march 4th 2011 (@2011-03-04 04:00:00.000 -> 2011-03-04 04:59:59.999@)
+* "2011-03-04 04:15" searches the minute of 15 mins past 4am march 4th 2011 (@2011-03-04 04:15:00.000 -> 2011-03-04 04:15:59.999@)
+* "2011-03-04 04:15:29" searches the second of 15:29 past 4am march 4th 2011 (@2011-03-04 04:15:29.000 -> 2011-03-04 04:15:29.999@)
+
+h3. Date Ranges
+
+* @2010 -> 2011@
+* @last week -> next week@
+* @2011-05 ->@
+* @< now@
+
+A Date Range is created by specifying two dates in any format (Keyword / Date / Time / DateTime) separated by @<@ or @->@ (both do the same thing)
+If either end of the date range is missing, it is the same as having no constraint in that direction
+Examples:
+* "2010 ->" searches from the start of 2010 into the future (@2010-01-01 00:00:00.000 -> null@)
+* "-> 2010" searches all the past to the end of 2010 (@null -> 2010-12-31 23:59:59.999@)
+* "2000 -> 2010" searches from the start of 2000 to the end of 2010 (@2000-01-01 00:00:00.000 -> 2010-12-31 23:59:59.999@)
+* "last year -> next year" search all of last year, this year and next year
+* "2010 -> now" searches the start of 2010 to now
+
+h3. Date Range using offset
+
+* @2010 -> 1yr@
+* @3mins < now@
+
+Searches the specified date including the range in the direction specified
+Example:
+* "2010 -> 1yr" searches all of 2010 and 1 year more (@2010-01-01 00:00:00.000 -> 2011-12-31 23:59:59.999@)
+* "3mins -> now" searches 3 minutes in the past to now
+
+h3. Anchor Ranges
+
+* @2010-05-13 05:13 <> 10m@
+* @now <> 1yr@
+* @lastweek <> 1month@
+
+entering a date followed by the @<>@ range operator followed by a range creates search centered on the date extended in both directions by the range
+Example:
+* "2010 <> 2days" searches from the start of 2010 - 2 days to the end of 2010 + 2 days (@2009-12-29 00:00:00.000 -> 2011-01-02 23:59:59.999@) 
+* "2010-01-01 <> 4m" searches from sept 2009 to april 2010 (@2009-09-01 00:00:00.000 -> 2010-04-30 23:59:59.999@)
+
