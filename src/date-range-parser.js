@@ -34,7 +34,7 @@ under the License.
 	drp.parse = function(v) {
 		try {
 			var r = drp._parse(v);
-			r.end--; // remove 1 millisecond from the final end range
+			r.end && r.end--; // remove 1 millisecond from the final end range
 		} catch(e) {
 			r = null;
 		}

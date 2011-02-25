@@ -171,7 +171,19 @@ DateRangeParserTest.prototype.testParse = function() {
 	assertRange(y2010, now + 123, "2010 -> now");
 	assertRange(now - 3*sec + 123, now + 3*sec + 123, "3secs");
 	
+	drp.now = now;
 
+	/* testing public parse function */
+	assertEquals("(parse), start now", now - day, drp.parse("now").start);
+	assertEquals("(parse), end now", now + day - 1, drp.parse("now").end);
+	assertEquals("(parse), start < now", null, drp.parse("< now").start);
+	assertEquals("(parse), end < now", now - 1, drp.parse("< now").end);
+	assertEquals("(parse), start now <", now, drp.parse("now <").start);
+	assertEquals("(parse), end now <", null, drp.parse("now <").end);
+
+	/* testing failure cases */
+	assertEquals("(parse), foo", null, drp.parse("foo"));
+	assertEquals("(parse), 2001-09-", null, drp.parse("2001-09-"));
 };
 
 
