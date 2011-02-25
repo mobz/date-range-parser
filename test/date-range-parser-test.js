@@ -184,6 +184,11 @@ DateRangeParserTest.prototype.testParse = function() {
 	/* testing failure cases */
 	assertEquals("(parse), foo", null, drp.parse("foo"));
 	assertEquals("(parse), 2001-09-", null, drp.parse("2001-09-"));
+	assertEquals("(parse), 2010 <> 20", null, drp.parse("2010 <> 20"));
+
+	/* testing empty input */
+	assertEquals("(parse), start (empty string)", null, drp.parse("").start);
+	assertEquals("(parse), end (undefined)", null, drp.parse().end);
 };
 
 

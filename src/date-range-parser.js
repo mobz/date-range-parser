@@ -148,6 +148,9 @@ under the License.
 			throw "unknown term " + term;
 		}
 
+		if(!v) {
+			return { start: null, end: null };
+		}
 		var terms = v.split(/\s*([^<>]*[^<>-])?\s*(->|<>|<)?\s*([^<>]+)?\s*/);
 		
 		var term1 = terms[1] ? procTerm(terms[1]) : null;
@@ -172,6 +175,7 @@ under the License.
 			if(!term2) {
 				return { start: term1.start - drp.defaultRange, end: term1.end + drp.defaultRange }
 			} else {
+				if(! ("rel" in term2)) throw "second term did not hav a range";
 				return { start: term1.start - term2.rel, end: term1.end + term2.rel };
 			}
 		} else {
