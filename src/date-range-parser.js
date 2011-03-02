@@ -2,7 +2,7 @@
  * date-range-parser.js
  * Contributed to the Apache Software Foundation by:
  *    Ben Birch - Aconex
- * fork me at https://github.com/mobz/date-range-parser 
+ * fork me at https://github.com/mobz/date-range-parser
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -33,14 +33,32 @@ under the License.
 
 	drp.parse = function(v) {
 		try {
-			var r = drp._parse(v);
+			var r = drp._parseDate(v);
 			r.end && r.end--; // remove 1 millisecond from the final end range
 		} catch(e) {
 			r = null;
 		}
 		return r;
 	};
-	
+
+	drp.printDate = function(t, p) {
+		var format = ["", "-", "-", " ", ":", ":", "."];
+		var da = makeArray(t);
+		var str = "";
+		for(var i = 0; i <= p; i++) {
+			str += format[i] + (da[i] < 10 ? "0" : "") + da[i];
+		}
+		return str;
+	};
+
+	drp.parseNumber = function(v) {
+		try {
+			var r = drp._parseNumber(v);
+		} catch(e) {
+			r = null;
+		}
+		return r;
+	};
 	
 	(function() {
 		drp._relTokens = {};
@@ -53,7 +71,7 @@ under the License.
 			"min" : 60*1000,
 			"sec" : 1000
 		};
-		
+
 		var alias_lu = {
 			"yr" : "y,yr,yrs,year,years",
 			"mon" : "mo,mon,mos,mons,month,months",
@@ -72,91 +90,40 @@ under the License.
 			}
 		}
 	})();
-	
-	drp._parse = function parse(v) {
-		var now = this.now || new Date().getTime();
 
-		function makeArray(d) {
-			var da = new Date(d);
-			return [ da.getUTCFullYear(), da.getUTCMonth()+1, da.getUTCDate(), da.getUTCHours(), da.getUTCMinutes(), da.getUTCSeconds(), da.getUTCMilliseconds() ];
-		}
-		function fromArray(a) {
-			var d = [].concat(a); d[1]--;
-			return Date.UTC.apply(null, d);
-		}
-		function precArray(d, p, offset) {
-			var tn = makeArray(d);
-			tn[p] += offset || 0; 
-			for(var i = p+1; i < 7; i++) {
-				tn[i] = i < 3 ? 1 : 0;
-			}
-			return tn;
-		}
-		function makePrecRange(dt, p, r) {
-			var ret = { };
-			ret.start = fromArray(dt);
-			dt[p] += r || 1;
-			ret.end = fromArray(dt);
-			return ret;
-		}
-		function procTerm(term) {
-			var m = term.replace(/\s/g, "").toLowerCase().match(/^([a-z ]+)$|^([ 0-9:-]+)$|^(\d+[a-z]+)$/);
-			if(m[1]) {	// matches ([a-z ]+)
-				function dra(p, o, r) {
-					var dt = precArray(now, p, o);
-					if(r) {
-						dt[2] -= new Date(fromArray(dt)).getUTCDay();
-					}
-					return makePrecRange(dt, p, r);
-				}
-				switch( m[1]) {
-					case "now" : return { start: now, end: now, now: now };
-					case "today" : return dra( 2, 0 );
-					case "thisweek" : return dra( 2, 0, 7 );
-					case "thismonth" : return dra( 1, 0 );
-					case "thisyear" : return dra( 0, 0 );
-					case "yesterday" : return dra( 2, -1 );
-					case "lastweek" : return dra( 2, -7, 7 );
-					case "lastmonth" : return dra( 1, -1 );
-					case "lastyear" : return dra( 0, -1 );
-					case "tomorrow" : return dra( 2, 1 );
-					case "nextweek" : return dra( 2, 7, 7 );
-					case "nextmonth" : return dra( 1, 1 );
-					case "nextyear" : return dra(0, 1 );
-				}
-				throw "unknown token " +  m[1];
-			} else if(m[2]) { // matches ([ 0-9:-]+)
-				dn = makeArray(now);
-				var dt = m[2].match(/^(?:(\d{4})(?:\-(\d\d))?(?:\-(\d\d))?)? ?(?:(\d{1,2})(?:\:(\d\d)(?:\:(\d\d))?)?)?$/);
-				dt.shift();
-				for(var p = 0, z = false, i = 0; i < 7; i++) {
-					if(dt[i]) {
-						dn[i] = parseInt(dt[i], 10);
-						p = i;
-						z = true;
-					} else {
-						if(z)
-							dn[i] = i < 3 ? 1 : 0;
-					}
-				}
-				return makePrecRange(dn, p);
-			} else if(m[3]) { // matches (\d+[a-z]{1,4})
-				var dr = m[3].match(/(\d+)\s*([a-z]+)/i);
-				var n = parseInt(dr[1], 10);
-				return { rel: n * drp._relTokens[dr[2]] };
-			}
-			throw "unknown term " + term;
-		}
+	// create an array of date components from a Date
+	function makeArray(d) {
+		var da = new Date(d);
+		return [ da.getUTCFullYear(), da.getUTCMonth()+1, da.getUTCDate(), da.getUTCHours(), da.getUTCMinutes(), da.getUTCSeconds(), da.getUTCMilliseconds() ];
+	}
 
-		if(!v) {
-			return { start: null, end: null };
-		}
-		var terms = v.split(/\s*([^<>]*[^<>-])?\s*(->|<>|<)?\s*([^<>]+)?\s*/);
-		
-		var term1 = terms[1] ? procTerm(terms[1]) : null;
-		var op = terms[2] || "";
-		var term2 = terms[3] ? procTerm(terms[3]) : null;
+	// convert an array of date components into a Date
+	function fromArray(a) {
+		var d = [].concat(a); d[1]--;
+		return Date.UTC.apply(null, d);
+	}
 
+	// create an array of date components with all entried with less significance than p (precision) zeroed out.
+	// an optional offset can be added to p
+	function precArray(d, p, offset) {
+		var tn = makeArray(d);
+		tn[p] += offset || 0;
+		for(var i = p+1; i < 7; i++) {
+			tn[i] = i < 3 ? 1 : 0;
+		}
+		return tn;
+	}
+
+	// create a range based on a precision and offset by the range amount
+	function makePrecRange(dt, p, r) {
+		var ret = { };
+		ret.start = fromArray(dt);
+		dt[p] += r || 1;
+		ret.end = fromArray(dt);
+		return ret;
+	}
+
+	function getRange(op, term1, term2, origin) {
 		if(op === "<" || op === "->" ) {
 			if(term1 && !term2) {
 				return { start: term1.start, end: null };
@@ -175,18 +142,96 @@ under the License.
 			if(!term2) {
 				return { start: term1.start - drp.defaultRange, end: term1.end + drp.defaultRange }
 			} else {
-				if(! ("rel" in term2)) throw "second term did not hav a range";
+				if(! ("rel" in term2)) throw "second term did not have a range";
 				return { start: term1.start - term2.rel, end: term1.end + term2.rel };
 			}
 		} else {
 			if(term1.rel) {
-				return { start: now - term1.rel, end: now + term1.rel };
+				return { start: origin - term1.rel, end: origin + term1.rel };
 			} else if(term1.now) {
 				return { start: term1.now - drp.defaultRange, end: term1.now + drp.defaultRange };
 			} else {
 				return { start: term1.start, end: term1.end };
 			}
 		}
-		throw "could not process value " + v;
+		throw "could not process range";
+	}
+
+	function procTerm(term, origin) {
+		var m = term.replace(/\s/g, "").toLowerCase().match(/^([a-z ]+)$|^([ 0-9:-]+)$|^(\d+[a-z]+)$/);
+		if(m[1]) {	// matches ([a-z ]+)
+			function dra(p, o, r) {
+				var dt = precArray(origin, p, o);
+				if(r) {
+					dt[2] -= new Date(fromArray(dt)).getUTCDay();
+				}
+				return makePrecRange(dt, p, r);
+			}
+			switch( m[1]) {
+				case "now" : return { start: origin, end: origin, now: origin };
+				case "today" : return dra( 2, 0 );
+				case "thisweek" : return dra( 2, 0, 7 );
+				case "thismonth" : return dra( 1, 0 );
+				case "thisyear" : return dra( 0, 0 );
+				case "yesterday" : return dra( 2, -1 );
+				case "lastweek" : return dra( 2, -7, 7 );
+				case "lastmonth" : return dra( 1, -1 );
+				case "lastyear" : return dra( 0, -1 );
+				case "tomorrow" : return dra( 2, 1 );
+				case "nextweek" : return dra( 2, 7, 7 );
+				case "nextmonth" : return dra( 1, 1 );
+				case "nextyear" : return dra(0, 1 );
+			}
+			throw "unknown token " +  m[1];
+		} else if(m[2]) { // matches ([ 0-9:-]+)
+			dn = makeArray(origin);
+			var dt = m[2].match(/^(?:(\d{4})(?:\-(\d\d))?(?:\-(\d\d))?)? ?(?:(\d{1,2})(?:\:(\d\d)(?:\:(\d\d))?)?)?$/);
+			dt.shift();
+			for(var p = 0, z = false, i = 0; i < 7; i++) {
+				if(dt[i]) {
+					dn[i] = parseInt(dt[i], 10);
+					p = i;
+					z = true;
+				} else {
+					if(z)
+						dn[i] = i < 3 ? 1 : 0;
+				}
+			}
+			return makePrecRange(dn, p);
+		} else if(m[3]) { // matches (\d+[a-z]{1,4})
+			var dr = m[3].match(/(\d+)\s*([a-z]+)/i);
+			var n = parseInt(dr[1], 10);
+			return { rel: n * drp._relTokens[dr[2]] };
+		}
+		throw "unknown term " + term;
+	}
+
+	drp._parseDate = function parseDate(v) {
+		var now = this.now || new Date().getTime();
+
+		if(!v) {
+			return { start: null, end: null };
+		}
+		var terms = v.split(/\s*([^<>]*[^<>-])?\s*(->|<>|<)?\s*([^<>]+)?\s*/);
+
+		var term1 = terms[1] ? procTerm(terms[1], now) : null;
+		var op = terms[2] || "";
+		var term2 = terms[3] ? procTerm(terms[3], now) : null;
+
+		return getRange(op, term1, term2, now);
 	};
+	
+	drp._parseNumber = function parseNumber(v) {
+		var origin = this.origin || 0;
+		if(!v) {
+			return { start: null, end: null };
+		}
+		var terms = v.split(/\s*(-?[0-9.eE]+)?\s*(->|<>|<)?\s*(-?[0-9.eE]+)?\s*/);
+		var term1 = terms[1] ? parseFloat(terms[1]) : null;
+		var op = terms[2] || "";
+		var term2 = terms[3] ? parseFloat(terms[3]) : null;
+		
+		return getRange(op, { start: term1, end: term1 }, { start: term2, end: term2, rel: (op === "<>" ? term2 : undefined) }, origin);
+	}
+	
 })();

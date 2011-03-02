@@ -3,6 +3,10 @@ h1. date-range-parser.js
 The _date-range-parser_ is a standalone javascript library that provides a natural language like 
 construct for generating date range queries that would be fed into a database or search service
 
+This is a preferred option for power user tools as standard date widgets require the use of a mouse.
+
+the date-range-parser also contains a number parser that follows the same constructs
+
 h2. How To Use
 
 @dateRangeParser.parse()@ either return @null@, if the string can not be converted, or an object with @start@ and @end@ attributes
@@ -194,4 +198,20 @@ entering a date followed by the @<>@ range operator followed by a range creates 
 Example:
 * "2010 <> 2days" searches from the start of 2010 - 2 days to the end of 2010 + 2 days (@2009-12-29 00:00:00.000 -> 2011-01-02 23:59:59.999@) 
 * "2010-01-01 <> 4m" searches from sept 2009 to april 2010 (@2009-09-01 00:00:00.000 -> 2010-04-30 23:59:59.999@)
+
+h3. Number Ranges
+
+The @parseNumber@ function can be used to parse a numnber range following the same conventions as the date range.
+The numberParser returns javascript numbers (which are either 32bit integers or 64bit floats)
+
+* @0@
+* @1@
+* @-100@
+* @0 -> 100@
+* @-99.999 -> 100.000@
+* @4.33e10@
+* @< 0.333@
+* @100 ->@
+
+
 

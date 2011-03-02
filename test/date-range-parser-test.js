@@ -1,6 +1,6 @@
 DateRangeParserTest = TestCase("DateRangeParserTest");
 
-DateRangeParserTest.prototype.testParse = function() {
+DateRangeParserTest.prototype.testParseDate = function() {
 	var now = 1000000000000; // sunday 09 sep 2001 01:46:40 GMT
 	var nowD = 999993600000; // sunday 09 sep 2001 00:00:00 GMT
 	var nowM = 999302400000; // saturday 01 sep 2001 00:00:00 GMT 
@@ -20,7 +20,7 @@ DateRangeParserTest.prototype.testParse = function() {
 	drp.defaultRange = day;
 
 	function assertRange(s, e, exp) {
-		var r = drp._parse(exp);
+		var r = drp._parseDate(exp);
 		assertEquals("start " + exp, s, r.start);
 		assertEquals("end " + exp, e, r.end);
 	}
@@ -191,4 +191,31 @@ DateRangeParserTest.prototype.testParse = function() {
 	assertEquals("(parse), end (undefined)", null, drp.parse().end);
 };
 
+DateRangeParserTest.prototype.testParseNumber = function() {
+	var drp = window.dateRangeParser;
+		
+	function assertNumberRange(s, e, exp) {
+		var r = drp._parseNumber(exp);
+		assertEquals("start " + exp, s, r.start);
+		assertEquals("end " + exp, e, r.end);
+	}
 
+	assertNumberRange(0, 0, "0");
+	assertNumberRange(1, 1, "1");
+	assertNumberRange(123456, 123456, "123456");
+	assertNumberRange(1.5, 1.5, "1.5");
+	assertNumberRange(300000, 300000, "3e5");
+	assertNumberRange(-88.3, -88.3, "-88.3");
+	assertNumberRange(-3200, -3200, "-3.2e3");
+	assertNumberRange(0, 100, "0 < 100");
+	assertNumberRange(-19, 21, "1 <> 20");
+	assertNumberRange(99, 99.999, "99 -> 99.999");
+	assertNumberRange(-10, 10, "<> 10");
+	assertNumberRange(0, 200, "100 <> 100");
+	assertNumberRange(10, 100, "1e1 -> 1e2");
+	assertNumberRange(-20000, 20000, "<> 2e4");
+	assertNumberRange(null, 5000, "-> 5000");
+	assertNumberRange(5000, null, "5000 -> ");
+	assertNumberRange(null, 5000, "< 5000");
+	assertNumberRange(5000, null, "5000 < ");
+}
